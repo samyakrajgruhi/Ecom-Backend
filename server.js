@@ -23,7 +23,8 @@ sequelize.sync();
 // Sample API Route
 app.get("/api/message", async (req, res) => {
     let message = await Message.findAll();
-  res.json(message);
+    let messages = message.map((message) => message.text);
+    res.json(messages);
 });
 
 // Start Server

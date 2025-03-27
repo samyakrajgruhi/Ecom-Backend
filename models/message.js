@@ -1,21 +1,15 @@
 'use strict';
-import { Model } from 'sequelize';
-export default (sequelize, DataTypes) => {
-  class Message extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
-    static associate(models) {
-      // define association here
+import { DataTypes } from "sequelize";
+
+const defineMessageModel = (sequelize) => {
+  const Message = sequelize.define("Message", {
+    text: {
+      type: DataTypes.STRING,
+      allowNull: false
     }
-  }
-  Message.init({
-    text: DataTypes.STRING
-  }, {
-    sequelize,
-    modelName: 'Message',
   });
+  
   return Message;
 };
+
+export default defineMessageModel;

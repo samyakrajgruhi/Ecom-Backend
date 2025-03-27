@@ -1,6 +1,7 @@
 import express from "express";
-import { Product, syncDatabase } from "./models/index.js";
+import { Product, DeliveryOption, syncDatabase } from "./models/index.js";
 import defaultProducts from "./defaultData/defaultProducts.js";
+import defaultDeliveryOptions from "./defaultData/defaultDeliveryOptions.js";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -29,6 +30,22 @@ const initializeData = async () => {
   } else {
     console.log(`Database already contains ${productCount} products.`);
   }
+
+  // Check if delivery options exist in the database
+  const deliveryOptionCount = await DeliveryOption.count();
+  
+  // If no delivery options exist, load the default delivery options
+  if (deliveryOptionCount === 0) {
+    console.log('No delivery options found in database. Loading default delivery options...');
+    try {
+      await DeliveryOption.bulkCreate(defaultDeliveryOptions);
+      console.log('Successfully loaded default delivery options.');
+    } catch (error) {
+      console.error('Error loading default delivery options:', error);
+    }
+  } else {
+    console.log(`Database already contains ${deliveryOptionCount} delivery options.`);
+  }
 };
 
 // Initialize database and start server
@@ -45,7 +62,7 @@ initializeData().then(() => {
   });
 
   // Products API Route - Get product by ID
-  app.get("/api/products/:id", async (req, res) => {
+  app.get("/products/:id", async (req, res) => {
     try {
       const product = await Product.findByPk(req.params.id);
       if (product) {
@@ -56,6 +73,16 @@ initializeData().then(() => {
     } catch (error) {
       console.error('Error fetching product:', error);
       res.status(500).json({ error: 'Failed to fetch product' });
+    }
+  });
+
+  app.get("/delivery-options", async (req, res) => {
+    try {
+      const deliveryOptions = await DeliveryOption.findAll();
+      res.json(deliveryOptions);
+    } catch (error) {
+      console.error('Error fetching delivery options:', error);
+      res.status(500).json({ error: 'Failed to fetch delivery options' });
     }
   });
 

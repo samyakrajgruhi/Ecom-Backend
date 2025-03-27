@@ -2,6 +2,7 @@
 
 import { Sequelize } from "sequelize";
 import defineProductModel from "./Product.js";
+import defineDeliveryOptionModel from "./DeliveryOption.js";
 
 // Initialize Sequelize
 const sequelize = new Sequelize({
@@ -11,10 +12,11 @@ const sequelize = new Sequelize({
 
 // Initialize models
 const Product = defineProductModel(sequelize);
+const DeliveryOption = defineDeliveryOptionModel(sequelize);
 
 // Sync database
 const syncDatabase = async () => {
   await sequelize.sync();
 };
 
-export { sequelize, Product, syncDatabase };
+export { sequelize, Product, DeliveryOption, syncDatabase };

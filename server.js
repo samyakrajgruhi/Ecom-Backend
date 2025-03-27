@@ -1,11 +1,14 @@
 import express from "express";
-import { Message, Product, syncDatabase } from "./models/index.js";
+import { Product, syncDatabase } from "./models/index.js";
 import defaultProducts from "./defaultData/defaultProducts.js";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Enable JSON parsing for request bodies
 app.use(express.json());
+
+// Serve static files from the images directory
+app.use('/images', express.static('images'));
 
 // Sync database and initialize with default data if needed
 const initializeData = async () => {
@@ -30,13 +33,6 @@ const initializeData = async () => {
 
 // Initialize database and start server
 initializeData().then(() => {
-  // Message API Route
-  app.get("/api/message", async (req, res) => {
-    let message = await Message.findAll();
-    let messages = message.map((message) => message.text);
-    res.json(messages);
-  });
-
   // Products API Route - Get all products
   app.get("/products", async (req, res) => {
     try {
@@ -66,6 +62,7 @@ initializeData().then(() => {
   // Start Server
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+    console.log(`Images can be accessed at http://localhost:${PORT}/images/`);
   });
 }).catch(error => {
   console.error('Failed to initialize database:', error);

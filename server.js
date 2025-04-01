@@ -1,7 +1,8 @@
 import express from "express";
-import { Product, DeliveryOption, syncDatabase } from "./models/index.js";
+import { Product, DeliveryOption, CartItem, syncDatabase } from "./models/index.js";
 import defaultProducts from "./defaultData/defaultProducts.js";
 import defaultDeliveryOptions from "./defaultData/defaultDeliveryOptions.js";
+import defaultCart from "./defaultData/defaultCart.js";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -46,6 +47,22 @@ const initializeData = async () => {
   } else {
     console.log(`Database already contains ${deliveryOptionCount} delivery options.`);
   }
+
+  // Check if cart items exist in the database
+  const cartItemCount = await CartItem.count();
+  
+  // If no cart items exist, load the default cart items
+  if (cartItemCount === 0) {
+    console.log('No cart items found in database. Loading default cart items...');
+    try {
+      await CartItem.bulkCreate(defaultCart);
+      console.log('Successfully loaded default cart items.');
+    } catch (error) {
+      console.error('Error loading default cart items:', error);
+    }
+  } else {
+    console.log(`Database already contains ${cartItemCount} cart items.`);
+  }
 };
 
 // Initialize database and start server
@@ -83,6 +100,17 @@ initializeData().then(() => {
     } catch (error) {
       console.error('Error fetching delivery options:', error);
       res.status(500).json({ error: 'Failed to fetch delivery options' });
+    }
+  });
+
+  // Add a new API route for cart items
+  app.get("/cart-items", async (req, res) => {
+    try {
+      const cartItems = await CartItem.findAll();
+      res.json(cartItems);
+    } catch (error) {
+      console.error('Error fetching cart items:', error);
+      res.status(500).json({ error: 'Failed to fetch cart items' });
     }
   });
 

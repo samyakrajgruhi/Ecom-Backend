@@ -106,8 +106,26 @@ initializeData().then(() => {
   // Add a new API route for cart items
   app.get("/cart-items", async (req, res) => {
     try {
-      const cartItems = await CartItem.findAll();
-      res.json(cartItems);
+      const { expand } = req.query;
+      let queryOptions = {};
+
+      // Check if expand=product is specified in the query
+      if (expand === 'product') {
+        queryOptions.include = [
+          {
+            model: Product,
+            attributes: ['id', 'name', 'image', 'priceCents', 'rating', 'keywords']
+          }
+        ];
+      }
+
+      const cartItems = await CartItem.findAll(queryOptions);
+
+      if (cartItems.length === 0) {
+        return res.status(200).json({ message: 'No items in cart', items: [] });
+      }
+
+      res.status(200).json(cartItems);
     } catch (error) {
       console.error('Error fetching cart items:', error);
       res.status(500).json({ error: 'Failed to fetch cart items' });

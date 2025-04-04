@@ -132,6 +132,60 @@ initializeData().then(() => {
     }
   });
 
+  // POST endpoint to add item to cart
+  app.post("/cart-items", async (req, res) => {
+    try {
+      const { productId, quantity } = req.body;
+
+      // Validate required fields
+      if (!productId) {
+        return res.status(400).json({ error: 'productId is required' });
+      }
+
+      // Validate quantity
+      const parsedQuantity = parseInt(quantity) || 1;
+      if (parsedQuantity < 1 || parsedQuantity > 10) {
+        return res.status(400).json({ error: 'Quantity must be between 1 and 10' });
+      }
+
+      // Check if product exists in database
+      const product = await Product.findByPk(productId);
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+
+      // Check if product already exists in cart
+      let cartItem = await CartItem.findOne({
+        where: { productId }
+      });
+
+      if (cartItem) {
+        // Product already in cart, update quantity (but don't exceed 10)
+        const newQuantity = Math.min(cartItem.quantity + parsedQuantity, 10);
+        
+        await cartItem.update({ quantity: newQuantity });
+        
+        return res.status(200).json({
+          cartItem
+        });
+      } else {
+        // Product not in cart, add new item with default delivery option
+        cartItem = await CartItem.create({
+          productId,
+          quantity: parsedQuantity,
+          deliveryOptionId: "1" // Default delivery option
+        });
+
+        return res.status(201).json({
+          cartItem
+        });
+      }
+    } catch (error) {
+      console.error('Error adding item to cart:', error);
+      res.status(500).json({ error: 'Failed to add item to cart' });
+    }
+  });
+
   // Start Server
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

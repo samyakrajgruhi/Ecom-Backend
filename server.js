@@ -240,6 +240,35 @@ initializeData().then(() => {
     }
   });
 
+  // DELETE endpoint to remove an item from cart
+  app.delete("/cart-items/:productId", async (req, res) => {
+    try {
+      const { productId } = req.params;
+      
+      // Find the cart item
+      const cartItem = await CartItem.findOne({
+        where: { productId }
+      });
+      
+      // Check if cart item exists
+      if (!cartItem) {
+        return res.status(404).json({ error: 'Product not found in cart' });
+      }
+      
+      // Delete the cart item
+      await cartItem.destroy();
+      
+      // Return success response
+      return res.status(200).json({ 
+        message: 'Product removed from cart',
+        productId 
+      });
+    } catch (error) {
+      console.error('Error removing item from cart:', error);
+      res.status(500).json({ error: 'Failed to remove item from cart' });
+    }
+  });
+
   // Start Server
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

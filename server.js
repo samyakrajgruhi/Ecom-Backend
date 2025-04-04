@@ -1,8 +1,10 @@
 import express from "express";
-import { Product, DeliveryOption, CartItem, syncDatabase } from "./models/index.js";
+import { Product, DeliveryOption, CartItem, Order, syncDatabase } from "./models/index.js";
 import defaultProducts from "./defaultData/defaultProducts.js";
 import defaultDeliveryOptions from "./defaultData/defaultDeliveryOptions.js";
 import defaultCart from "./defaultData/defaultCart.js";
+import defaultOrders from "./defaultData/defaultOrders.js"; // Use the new defaultOrders.js file
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -15,11 +17,9 @@ app.use('/images', express.static('images'));
 // Sync database and initialize with default data if needed
 const initializeData = async () => {
   await syncDatabase();
-  
+
   // Check if products exist in the database
   const productCount = await Product.count();
-  
-  // If no products exist, load the default products
   if (productCount === 0) {
     console.log('No products found in database. Loading default products...');
     try {
@@ -34,8 +34,6 @@ const initializeData = async () => {
 
   // Check if delivery options exist in the database
   const deliveryOptionCount = await DeliveryOption.count();
-  
-  // If no delivery options exist, load the default delivery options
   if (deliveryOptionCount === 0) {
     console.log('No delivery options found in database. Loading default delivery options...');
     try {
@@ -50,8 +48,6 @@ const initializeData = async () => {
 
   // Check if cart items exist in the database
   const cartItemCount = await CartItem.count();
-  
-  // If no cart items exist, load the default cart items
   if (cartItemCount === 0) {
     console.log('No cart items found in database. Loading default cart items...');
     try {
@@ -62,6 +58,20 @@ const initializeData = async () => {
     }
   } else {
     console.log(`Database already contains ${cartItemCount} cart items.`);
+  }
+
+  // Check if orders exist in the database
+  const orderCount = await Order.count();
+  if (orderCount === 0) {
+    console.log('No orders found in database. Loading default orders...');
+    try {
+      await Order.bulkCreate(defaultOrders);
+      console.log('Successfully loaded default orders.');
+    } catch (error) {
+      console.error('Error loading default orders:', error);
+    }
+  } else {
+    console.log(`Database already contains ${orderCount} orders.`);
   }
 };
 
@@ -269,11 +279,55 @@ initializeData().then(() => {
     }
   });
 
+  // Add a new API route for orders
+  app.get("/orders", async (req, res) => {
+    try {
+      const { expand } = req.query;
+
+      // Fetch all orders
+      const orders = await Order.findAll();
+
+      // If expand=product is specified, include product details
+      if (expand === "product") {
+        const productIds = new Set();
+        orders.forEach(order => {
+          order.products.forEach(product => productIds.add(product.productId));
+        });
+
+        // Fetch product details for all productIds in the orders
+        const products = await Product.findAll({
+          where: { id: Array.from(productIds) },
+          attributes: ["id", "name", "image", "priceCents", "rating", "keywords"]
+        });
+
+        const productMap = {};
+        products.forEach(product => {
+          productMap[product.id] = product;
+        });
+
+        // Add product details to each product in the orders
+        orders.forEach(order => {
+          order.products = order.products.map(product => ({
+            ...product,
+            product: productMap[product.productId] || null
+          }));
+        });
+      }
+
+      res.json(orders);
+    } catch (error) {
+      console.error("Error fetching orders:", error.message);
+      console.error("Stack trace:", error.stack);
+      res.status(500).json({ error: "Failed to fetch orders", details: error.message });
+    }
+  });
+
   // Start Server
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log(`Images can be accessed at http://localhost:${PORT}/images/`);
   });
 }).catch(error => {
-  console.error('Failed to initialize database:', error);
+  console.error('Failed to initialize database:', error.message);
+  console.error('Stack trace:', error.stack);
 });

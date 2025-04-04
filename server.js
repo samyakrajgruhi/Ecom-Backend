@@ -186,6 +186,60 @@ initializeData().then(() => {
     }
   });
 
+  // PUT endpoint to update a cart item
+  app.put("/cart-items/:productId", async (req, res) => {
+    try {
+      const { productId } = req.params;
+      const { quantity, deliveryOptionId } = req.body;
+      
+      // Find the cart item
+      const cartItem = await CartItem.findOne({
+        where: { productId }
+      });
+      
+      // Check if cart item exists
+      if (!cartItem) {
+        return res.status(404).json({ error: 'Product not found in cart' });
+      }
+      
+      // Prepare update object
+      const updateData = {};
+      
+      // Validate and add quantity if provided
+      if (quantity !== undefined) {
+        const parsedQuantity = parseInt(quantity);
+        if (isNaN(parsedQuantity) || parsedQuantity < 1 || parsedQuantity > 10) {
+          return res.status(400).json({ error: 'Quantity must be between 1 and 10' });
+        }
+        updateData.quantity = parsedQuantity;
+      }
+      
+      // Validate and add deliveryOptionId if provided
+      if (deliveryOptionId !== undefined) {
+        // Check if delivery option exists
+        const deliveryOption = await DeliveryOption.findByPk(deliveryOptionId);
+        if (!deliveryOption) {
+          return res.status(400).json({ error: 'Invalid delivery option' });
+        }
+        updateData.deliveryOptionId = deliveryOptionId;
+      }
+      
+      // If no update data was provided
+      if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ error: 'No valid update data provided' });
+      }
+      
+      // Update the cart item
+      await cartItem.update(updateData);
+      
+      // Return the updated cart item
+      return res.status(200).json(cartItem);
+    } catch (error) {
+      console.error('Error updating cart item:', error);
+      res.status(500).json({ error: 'Failed to update cart item' });
+    }
+  });
+
   // Start Server
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

@@ -323,6 +323,51 @@ initializeData().then(() => {
     }
   });
 
+  // Add a new API route to get a single order by ID
+  app.get("/orders/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { expand } = req.query;
+
+      // Find the order by ID
+      const order = await Order.findByPk(id);
+      
+      // Check if order exists
+      if (!order) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+
+      // If expand=product is specified, include product details
+      if (expand === "products") {
+        const productIds = new Set();
+        order.products.forEach(product => productIds.add(product.productId));
+
+        // Fetch product details for all productIds in the order
+        const products = await Product.findAll({
+          where: { id: Array.from(productIds) },
+          attributes: ["id", "name", "image", "priceCents", "rating", "keywords"]
+        });
+
+        const productMap = {};
+        products.forEach(product => {
+          productMap[product.id] = product;
+        });
+
+        // Add product details to each product in the order
+        order.products = order.products.map(product => ({
+          ...product,
+          product: productMap[product.productId] || null
+        }));
+      }
+
+      res.json(order);
+    } catch (error) {
+      console.error("Error fetching order:", error.message);
+      console.error("Stack trace:", error.stack);
+      res.status(500).json({ error: "Failed to fetch order", details: error.message });
+    }
+  });
+
   // Add a new API route for creating an order
   app.post("/orders", async (req, res) => {
     try {

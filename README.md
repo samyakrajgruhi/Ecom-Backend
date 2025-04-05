@@ -47,7 +47,14 @@ All endpoints return responses in JSON format. Most errors return appropriate HT
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/products` | Get all products |
+| GET | `/products?search=query` | Search products by name or keywords with fuzzy matching |
 | GET | `/products/:id` | Get a specific product by ID |
+
+#### Product Search Features
+The search functionality includes fuzzy matching, which means:
+- It finds exact and partial matches in product names and keywords
+- It's forgiving of typos and misspellings (e.g., "bsktball" will match "basketball")
+- It's case-insensitive
 
 ### Cart Endpoints
 
@@ -57,15 +64,6 @@ All endpoints return responses in JSON format. Most errors return appropriate HT
 | POST | `/cart-items` | Add product to cart |
 | PUT | `/cart-items/:productId` | Update cart item (quantity or delivery option) |
 | DELETE | `/cart-items/:productId` | Remove item from cart |
-
-#### Adding to Cart Example:
-```json
-POST /cart-items
-{
-  "productId": "e43638ce-6aa0-4b85-b27f-e1d07eb678c6",
-  "quantity": 2
-}
-```
 
 ### Payment Endpoints
 
@@ -93,20 +91,6 @@ POST /cart-items
 | GET | `/orders/:id` | Get a specific order (use `?expand=products` for product details) |
 | POST | `/orders` | Create a new order from cart (automatically empties cart) |
 | DELETE | `/orders/:id` | Cancel/delete an order |
-
-#### Creating Order Example:
-```json
-POST /orders
-{
-  "cart": [
-    {
-      "productId": "e43638ce-6aa0-4b85-b27f-e1d07eb678c6",
-      "quantity": 2,
-      "deliveryOptionId": "1"
-    }
-  ]
-}
-```
 
 ### Shipping Endpoints
 
@@ -152,30 +136,40 @@ This sequence demonstrates a typical checkout flow:
    GET /products
    ```
 
-2. **Add item to cart**
+2. **Search for products**
+   ```
+   GET /products?search=basketball
+   ```
+
+3. **Add item to cart**
    ```
    POST /cart-items
    {"productId": "e43638ce-6aa0-4b85-b27f-e1d07eb678c6", "quantity": 2}
    ```
 
-3. **Check payment summary**
+4. **Check payment summary**
    ```
    GET /payment-summary
    ```
 
-4. **Update delivery option**
+5. **Get delivery options with estimated times**
+   ```
+   GET /delivery-options?expand=estimatedDeliveryTime
+   ```
+
+6. **Update delivery option**
    ```
    PUT /cart-items/e43638ce-6aa0-4b85-b27f-e1d07eb678c6
    {"deliveryOptionId": "2"}
    ```
 
-5. **Place an order**
+7. **Place an order**
    ```
    POST /orders
    {"cart": [{"productId": "e43638ce-6aa0-4b85-b27f-e1d07eb678c6", "quantity": 2, "deliveryOptionId": "1"}]}
    ```
 
-6. **Check order status**
+8. **Check order status**
    ```
    GET /orders
    ```

@@ -12,7 +12,6 @@
     "lint:fix": "eslint . --fix",
     "dev": "nodemon server.js",
     "add-product": "node scripts/addProduct.js",
-    "update-image": "node scripts/updateProductImage.js"
   },
   "devDependencies": {
     "eslint": "^8.53.0",

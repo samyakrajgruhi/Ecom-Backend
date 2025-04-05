@@ -113,6 +113,29 @@ POST /orders
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/delivery-options` | Get all available shipping methods |
+| GET | `/delivery-options?expand=estimatedDeliveryTime` | Get shipping methods with estimated delivery times |
+
+#### Estimated Delivery Time:
+When using the `expand=estimatedDeliveryTime` parameter, each delivery option will include an additional field:
+- `estimatedDeliveryTimeMs`: Timestamp in milliseconds when the delivery is expected (based on current time + delivery days)
+
+Example response:
+```json
+[
+  {
+    "id": "1",
+    "deliveryDays": 7,
+    "priceCents": 0,
+    "estimatedDeliveryTimeMs": 1692458765432
+  },
+  {
+    "id": "2",
+    "deliveryDays": 3,
+    "priceCents": 499,
+    "estimatedDeliveryTimeMs": 1692199565432
+  }
+]
+```
 
 ### Utility Endpoints
 

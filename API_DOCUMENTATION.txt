@@ -2,91 +2,80 @@
 E-COMMERCE API DOCUMENTATION
 =================================================
 
-PRODUCTS
---------
-GET /products
-  • Returns list of all available products
+BASE URL: http://localhost:3000
 
-GET /products/:id
-  • Returns specific product details by ID
+PRODUCT ENDPOINTS
+-----------------
+GET /products         - Get all products
+GET /products/:id     - Get product by ID
 
-CART
-----
-GET /cart-items
-  • Returns current shopping cart contents
-  • Optional query parameter: ?expand=product (includes full product details)
+CART ENDPOINTS
+--------------
+GET /cart-items       - View cart (add ?expand=product for product details)
+POST /cart-items      - Add to cart (body: {"productId": "abc123", "quantity": 2})
+PUT /cart-items/:id   - Update cart item (body: {"quantity": 3, "deliveryOptionId": "2"})
+DELETE /cart-items/:id - Remove from cart
 
-POST /cart-items
-  • Adds product to cart
-  • Required body:
-
-   { 
-      "productId": "string", 
-      "quantity": number 
-   }
-
-  • If product already in cart, increases quantity
-
-PUT /cart-items/:productId
-  • Updates cart item
-  • Body options: 
-   { 
-      "quantity": number, 
-      "deliveryOptionId": "string" 
-   }
-
-DELETE /cart-items/:productId
-  • Removes product from cart
-
-DELIVERY OPTIONS
+PAYMENT SUMMARY
 ---------------
-GET /delivery-options
-  • Returns available shipping methods
+GET /payment-summary  
+- Get detailed cost breakdown including:
+   • totalItems (count of all items)
+   • productCostCents (cost of products only)
+   • shippingCostCents (total shipping cost)
+   • subtotalCents (products + shipping)
+   • taxCents (10% tax amount)
+   • totalCents (final total with tax)
 
-ORDERS
-------
-GET /orders
-  • Returns order history
-  • Optional query parameter: ?expand=product (includes full product details) 
-
-GET /orders/:id
-  • Returns specific order by ID
-  • Optional query parameter: ?expand=products (includes full product details)
-
-POST /orders
-  • Creates new order from cart items
-  • Required body: 
-   { 
-      "cart": 
-      [
-         { 
-            "productId": "string", 
-            "quantity": number, 
-            "deliveryOptionId": "string" 
-         }
-      ]
+- Example response:
+   {
+      "totalItems": 3,
+      "productCostCents": 4285,
+      "shippingCostCents": 499,
+      "subtotalCents": 4784,
+      "taxCents": 478,
+      "totalCents": 5262
    }
-  • Automatically empties cart after successful order
 
-DELETE /orders/:id
-  • Cancels/deletes an order
+ORDER ENDPOINTS
+---------------
+GET /orders           - View all orders (add ?expand=product for details)
+GET /orders/:id       - View specific order (add ?expand=products for details)
+POST /orders          - Create order from cart items (automatically empties cart)
+DELETE /orders/:id    - Cancel/delete an order
 
-SYSTEM
-------
-POST /reset
-  • Resets database to default state
-  • Warning: Deletes all user data
+SHIPPING ENDPOINTS
+------------------
+GET /delivery-options - View available shipping methods
+
+UTILITY ENDPOINTS
+-----------------
+POST /reset           - Reset database and reload default data
 
 =================================================
-USAGE EXAMPLE
+QUICK START GUIDE
 =================================================
 
-1. View products:    GET /products
-2. Add to cart:      POST /cart-items 
-                     { "productId": "e43638ce-6aa0-4b85-b27f-e1d07eb678c6", "quantity": 2 }
-3. View cart:        GET /cart-items?expand=product
-4. Update shipping:  PUT /cart-items/e43638ce-6aa0-4b85-b27f-e1d07eb678c6
-                     { "deliveryOptionId": "2" }
-5. Place order:      POST /orders
-                     { "cart": [...contents of GET /cart-items response...] }
-6. View orders:      GET /orders
+1. Browse products:
+   GET /products
+
+2. Add item to cart:
+   POST /cart-items
+   {"productId": "e43638ce-6aa0-4b85-b27f-e1d07eb678c6", "quantity": 2}
+
+3. Check payment summary:
+   GET /payment-summary
+
+4. Update delivery option:
+   PUT /cart-items/e43638ce-6aa0-4b85-b27f-e1d07eb678c6
+   {"deliveryOptionId": "2"}
+
+5. Place an order:
+   POST /orders
+   {"cart": [{"productId": "e43638ce-6aa0-4b85-b27f-e1d07eb678c6, "quantity": 2, "deliveryOptionId": "1"}]}
+
+6. Check order status:
+   GET /orders
+
+7. Reset system (caution - deletes all data):
+   POST /reset

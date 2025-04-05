@@ -8,6 +8,7 @@ import deliveryRoutes from './routes/deliveryRoutes.js';
 import cartRoutes from './routes/cartRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import resetRoutes from './routes/resetRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,6 +25,7 @@ app.use('/delivery-options', deliveryRoutes);
 app.use('/cart-items', cartRoutes);
 app.use('/orders', orderRoutes);
 app.use('/reset', resetRoutes);
+app.use('/payment-summary', paymentRoutes);
 
 // Initialize database and start server
 syncDatabase().then(async () => {

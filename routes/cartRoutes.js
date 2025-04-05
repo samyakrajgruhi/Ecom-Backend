@@ -108,8 +108,8 @@ router.put("/:productId", async (req, res) => {
     // Validate and add quantity if provided
     if (quantity !== undefined) {
       const parsedQuantity = parseInt(quantity);
-      if (isNaN(parsedQuantity) || parsedQuantity < 1 || parsedQuantity > 10) {
-        return res.status(400).json({ error: 'Quantity must be between 1 and 10' });
+      if (isNaN(parsedQuantity) || parsedQuantity < 1) {
+        return res.status(400).json({ error: 'Quantity must be between a number greater than 0' });
       }
       updateData.quantity = parsedQuantity;
     }

@@ -1,6 +1,6 @@
 /* eslint-disable node/no-unsupported-features/es-syntax */
 import express from "express";
-import { Product, DeliveryOption, CartItem, Order, syncDatabase } from "./models/index.js";
+import { Product, DeliveryOption, CartItem, Order, syncDatabase, sequelize } from "./models/index.js";
 import defaultProducts from "./defaultData/defaultProducts.js";
 import defaultDeliveryOptions from "./defaultData/defaultDeliveryOptions.js";
 import defaultCart from "./defaultData/defaultCart.js";
@@ -16,68 +16,68 @@ app.use(express.json());
 app.use('/images', express.static('images'));
 
 // Sync database and initialize with default data if needed
-const initializeData = async () => {
-  await syncDatabase();
+// const initializeData = async () => {
+//   await syncDatabase();
 
-  // Check if products exist in the database
-  const productCount = await Product.count();
-  if (productCount === 0) {
-    console.log('No products found in database. Loading default products...');
-    try {
-      await Product.bulkCreate(defaultProducts);
-      console.log('Successfully loaded default products.');
-    } catch (error) {
-      console.error('Error loading default products:', error);
-    }
-  } else {
-    console.log(`Database already contains ${productCount} products.`);
-  }
+//   // Check if products exist in the database
+//   const productCount = await Product.count();
+//   if (productCount === 0) {
+//     console.log('No products found in database. Loading default products...');
+//     try {
+//       await Product.bulkCreate(defaultProducts);
+//       console.log('Successfully loaded default products.');
+//     } catch (error) {
+//       console.error('Error loading default products:', error);
+//     }
+//   } else {
+//     console.log(`Database already contains ${productCount} products.`);
+//   }
 
-  // Check if delivery options exist in the database
-  const deliveryOptionCount = await DeliveryOption.count();
-  if (deliveryOptionCount === 0) {
-    console.log('No delivery options found in database. Loading default delivery options...');
-    try {
-      await DeliveryOption.bulkCreate(defaultDeliveryOptions);
-      console.log('Successfully loaded default delivery options.');
-    } catch (error) {
-      console.error('Error loading default delivery options:', error);
-    }
-  } else {
-    console.log(`Database already contains ${deliveryOptionCount} delivery options.`);
-  }
+//   // Check if delivery options exist in the database
+//   const deliveryOptionCount = await DeliveryOption.count();
+//   if (deliveryOptionCount === 0) {
+//     console.log('No delivery options found in database. Loading default delivery options...');
+//     try {
+//       await DeliveryOption.bulkCreate(defaultDeliveryOptions);
+//       console.log('Successfully loaded default delivery options.');
+//     } catch (error) {
+//       console.error('Error loading default delivery options:', error);
+//     }
+//   } else {
+//     console.log(`Database already contains ${deliveryOptionCount} delivery options.`);
+//   }
 
-  // Check if cart items exist in the database
-  const cartItemCount = await CartItem.count();
-  if (cartItemCount === 0) {
-    console.log('No cart items found in database. Loading default cart items...');
-    try {
-      await CartItem.bulkCreate(defaultCart);
-      console.log('Successfully loaded default cart items.');
-    } catch (error) {
-      console.error('Error loading default cart items:', error);
-    }
-  } else {
-    console.log(`Database already contains ${cartItemCount} cart items.`);
-  }
+//   // Check if cart items exist in the database
+//   const cartItemCount = await CartItem.count();
+//   if (cartItemCount === 0) {
+//     console.log('No cart items found in database. Loading default cart items...');
+//     try {
+//       await CartItem.bulkCreate(defaultCart);
+//       console.log('Successfully loaded default cart items.');
+//     } catch (error) {
+//       console.error('Error loading default cart items:', error);
+//     }
+//   } else {
+//     console.log(`Database already contains ${cartItemCount} cart items.`);
+//   }
 
-  // Check if orders exist in the database
-  const orderCount = await Order.count();
-  if (orderCount === 0) {
-    console.log('No orders found in database. Loading default orders...');
-    try {
-      await Order.bulkCreate(defaultOrders);
-      console.log('Successfully loaded default orders.');
-    } catch (error) {
-      console.error('Error loading default orders:', error);
-    }
-  } else {
-    console.log(`Database already contains ${orderCount} orders.`);
-  }
-};
+//   // Check if orders exist in the database
+//   const orderCount = await Order.count();
+//   if (orderCount === 0) {
+//     console.log('No orders found in database. Loading default orders...');
+//     try {
+//       await Order.bulkCreate(defaultOrders);
+//       console.log('Successfully loaded default orders.');
+//     } catch (error) {
+//       console.error('Error loading default orders:', error);
+//     }
+//   } else {
+//     console.log(`Database already contains ${orderCount} orders.`);
+//   }
+// };
 
 // Initialize database and start server
-initializeData().then(() => {
+syncDatabase().then(async () => {
   // Products API Route - Get all products
   app.get("/products", async (req, res) => {
     try {
@@ -494,6 +494,66 @@ initializeData().then(() => {
       console.error('Error deleting order:', error.message);
       console.error('Stack trace:', error.stack);
       res.status(500).json({ error: 'Failed to delete order', details: error.message });
+    }
+  });
+
+  // Updated API route for resetting the database
+  app.post("/reset", async (req, res) => {
+    try {
+      console.log("Resetting database...");
+      
+      // Drop and recreate all tables in a single operation
+      await sequelize.sync({ force: true });
+      console.log("Database reset successful - all tables dropped and recreated");
+      
+      // Reload default data
+      console.log("Loading default data after reset...");
+      
+      // Load default products
+      try {
+        await Product.bulkCreate(defaultProducts);
+        console.log('Successfully loaded default products.');
+      } catch (error) {
+        console.error('Error loading default products:', error);
+      }
+      
+      // Load default delivery options
+      try {
+        await DeliveryOption.bulkCreate(defaultDeliveryOptions);
+        console.log('Successfully loaded default delivery options.');
+      } catch (error) {
+        console.error('Error loading default delivery options:', error);
+      }
+      
+      // Load default cart items
+      try {
+        await CartItem.bulkCreate(defaultCart);
+        console.log('Successfully loaded default cart items.');
+      } catch (error) {
+        console.error('Error loading default cart items:', error);
+      }
+      
+      // Load default orders
+      try {
+        await Order.bulkCreate(defaultOrders);
+        console.log('Successfully loaded default orders.');
+      } catch (error) {
+        console.error('Error loading default orders:', error);
+      }
+      
+      return res.status(200).json({ 
+        message: 'Database reset successfully with default data loaded',
+        stats: {
+          products: await Product.count(),
+          deliveryOptions: await DeliveryOption.count(),
+          cartItems: await CartItem.count(),
+          orders: await Order.count()
+        }
+      });
+    } catch (error) {
+      console.error('Error resetting database:', error.message);
+      console.error('Stack trace:', error.stack);
+      res.status(500).json({ error: 'Failed to reset database', details: error.message });
     }
   });
 

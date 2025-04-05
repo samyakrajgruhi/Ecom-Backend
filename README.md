@@ -1,3 +1,5 @@
+![Ecom-Backend](https://socialify.git.ci/samyakrajgruhi/Ecom-Backend/image?font=Raleway&language=1&name=1&owner=1&pattern=Transparent&theme=Dark)
+
 # E-Commerce API
 
 A robust RESTful API for an e-commerce platform, built with Express.js and Sequelize.

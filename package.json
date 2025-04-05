@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "dev": "nodemon server.js",
-    "add-product": "node scripts/addProduct.js",
+    "add-product": "node scripts/addProduct.js"
   },
   "devDependencies": {
     "eslint": "^8.53.0",

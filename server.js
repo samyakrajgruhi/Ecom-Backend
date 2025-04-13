@@ -1,5 +1,6 @@
 /* eslint-disable node/no-unsupported-features/es-syntax */
 import express from "express";
+import cors from "cors";
 import { syncDatabase } from "./models/index.js";
 
 // Import routes
@@ -15,6 +16,13 @@ const PORT = process.env.PORT || 3000;
 
 // Enable JSON parsing for request bodies
 app.use(express.json());
+app.use(cors(
+  {
+    origin: '*', // Allow all origins
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow specific HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Allow specific headers
+  }
+));
 
 // Serve static files from the images directory
 app.use('/images', express.static('images'));

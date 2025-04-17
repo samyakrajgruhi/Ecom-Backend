@@ -9,8 +9,10 @@ router.get("/", async (req, res) => {
   try {
     const { expand } = req.query;
 
-    // Fetch all orders
-    const orders = await Order.findAll();
+    // Fetch all orders and sort by orderTimeMs in descending order (newest first)
+    const orders = await Order.findAll({
+      order: [['orderTimeMs', 'DESC']]
+    });
 
     // If expand=product is specified, include product details
     if (expand === "product") {
@@ -95,71 +97,36 @@ router.get("/:id", async (req, res) => {
 // Create a new order
 router.post("/", async (req, res) => {
   try {
-    const { cart } = req.body;
+    // Fetch cart items from the database instead of using req.body
+    const cartItems = await CartItem.findAll({
+      include: [
+        { model: Product, attributes: ['id', 'priceCents'] },
+        { model: DeliveryOption, attributes: ['id', 'priceCents', 'deliveryDays'] }
+      ]
+    });
 
-    // Validate the cart
-    if (!Array.isArray(cart) || cart.length === 0) {
-      return res.status(400).json({ error: "Cart must be a non-empty array" });
+    // Check if cart is empty
+    if (cartItems.length === 0) {
+      return res.status(400).json({ error: "Cart is empty. Please add items to cart before placing an order." });
     }
 
-    // Log delivery options for debugging
-    const allDeliveryOptions = await DeliveryOption.findAll();
-    console.log("Available delivery options:", allDeliveryOptions.map(opt => opt.id));
-
-    // Fetch all products and delivery options for validation and cost calculation
-    const productIds = cart.map(item => item.productId);
-    const products = await Product.findAll({
-      where: { id: productIds }
-    });
-    const deliveryOptions = await DeliveryOption.findAll();
-
-    // Create maps for quick lookup
-    const productMap = {};
-    products.forEach(product => {
-      productMap[product.id] = product;
-    });
-
-    const deliveryOptionMap = {};
-    deliveryOptions.forEach(option => {
-      deliveryOptionMap[option.id] = option;
-    });
-
-    // Validate each cart item and calculate the total cost
+    // Calculate the total cost and prepare the order products
     let totalCostCents = 0;
-    let validatedCart = [];
+    const validatedCart = [];
 
-    for (const item of cart) {
-      const { productId, quantity, deliveryOptionId } = item;
-
-      // Validate productId
-      const product = productMap[productId];
-      if (!product) {
-        return res.status(400).json({ error: `Invalid productId: ${productId}` });
-      }
-
-      // Validate quantity
-      if (!quantity || quantity < 1 || quantity > 10) {
-        return res.status(400).json({ error: `Invalid quantity for productId: ${productId}` });
-      }
-
-      // Validate deliveryOptionId
-      const deliveryOption = deliveryOptionMap[deliveryOptionId];
-      if (!deliveryOption) {
-        return res.status(400).json({ 
-          error: `Invalid deliveryOptionId: ${deliveryOptionId}`,
-          availableOptions: Object.keys(deliveryOptionMap)
-        });
-      }
-
+    for (const item of cartItems) {
+      const productId = item.productId;
+      const quantity = item.quantity;
+      
       // Calculate cost for this cart item
-      const productCost = product.priceCents * quantity;
-      const shippingCost = deliveryOption.priceCents;
+      const productCost = item.Product.priceCents * quantity;
+      const shippingCost = item.DeliveryOption.priceCents;
       totalCostCents += productCost + shippingCost;
 
       // Add to validated cart with delivery date calculation
       const currentDate = new Date();
       const deliveryDate = new Date(currentDate);
-      deliveryDate.setDate(deliveryDate.getDate() + deliveryOption.deliveryDays);
+      deliveryDate.setDate(deliveryDate.getDate() + item.DeliveryOption.deliveryDays);
       
       validatedCart.push({
         productId,
@@ -183,7 +150,9 @@ router.post("/", async (req, res) => {
       products: validatedCart
     });
 
+    // Clear the cart after creating the order
     await CartItem.destroy({where:{}});
+    
     res.status(201).json(newOrder);
 
   } catch (error) {

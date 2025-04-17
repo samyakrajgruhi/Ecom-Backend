@@ -27,13 +27,13 @@ app.use(cors(
 // Serve static files from the images directory
 app.use('/images', express.static('images'));
 
-// Use the route files
-app.use('/products', productRoutes);
-app.use('/delivery-options', deliveryRoutes);
-app.use('/cart-items', cartRoutes);
-app.use('/orders', orderRoutes);
-app.use('/reset', resetRoutes);
-app.use('/payment-summary', paymentRoutes);
+// Use the route files with /api prefix
+app.use('/api/products', productRoutes);
+app.use('/api/delivery-options', deliveryRoutes);
+app.use('/api/cart-items', cartRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/reset', resetRoutes);
+app.use('/api/payment-summary', paymentRoutes);
 
 // Initialize database and start server
 syncDatabase().then(async () => {
@@ -41,6 +41,7 @@ syncDatabase().then(async () => {
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log(`Images can be accessed at http://localhost:${PORT}/images/`);
+    console.log(`API endpoints are available at http://localhost:${PORT}/api/*`);
   });
 }).catch(error => {
   console.error('Failed to initialize database:', error.message);

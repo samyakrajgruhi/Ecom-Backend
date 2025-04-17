@@ -43,14 +43,15 @@ The server will start on port 3000 by default: http://localhost:3000
 ## API Documentation
 
 All endpoints return responses in JSON format. Most errors return appropriate HTTP status codes with error messages.
+All API routes are prefixed with `/api` except for image assets which are available directly at `/images`.
 
 ### Product Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/products` | Get all products |
-| GET | `/products?search=query` | Search products by name or keywords with fuzzy matching |
-| GET | `/products/:id` | Get a specific product by ID |
+| GET | `/api/products` | Get all products |
+| GET | `/api/products?search=query` | Search products by name or keywords with fuzzy matching |
+| GET | `/api/products/:id` | Get a specific product by ID |
 
 #### Product Search Features
 The search functionality includes fuzzy matching, which means:
@@ -62,16 +63,16 @@ The search functionality includes fuzzy matching, which means:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/cart-items` | Get all items in cart (use `?expand=product` for product details) |
-| POST | `/cart-items` | Add product to cart |
-| PUT | `/cart-items/:productId` | Update cart item (quantity or delivery option) |
-| DELETE | `/cart-items/:productId` | Remove item from cart |
+| GET | `/api/cart-items` | Get all items in cart (use `?expand=product` for product details) |
+| POST | `/api/cart-items` | Add product to cart |
+| PUT | `/api/cart-items/:productId` | Update cart item (quantity or delivery option) |
+| DELETE | `/api/cart-items/:productId` | Remove item from cart |
 
 ### Payment Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/payment-summary` | Get detailed cost breakdown of current cart |
+| GET | `/api/payment-summary` | Get detailed cost breakdown of current cart |
 
 #### Payment Summary Response Example:
 ```json
@@ -89,17 +90,17 @@ The search functionality includes fuzzy matching, which means:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/orders` | Get all orders (use `?expand=product` for product details) |
-| GET | `/orders/:id` | Get a specific order (use `?expand=products` for product details) |
-| POST | `/orders` | Create a new order from cart (automatically empties cart) |
-| DELETE | `/orders/:id` | Cancel/delete an order |
+| GET | `/api/orders` | Get all orders (use `?expand=product` for product details) |
+| GET | `/api/orders/:id` | Get a specific order (use `?expand=products` for product details) |
+| POST | `/api/orders` | Create a new order from cart (automatically empties cart) |
+| DELETE | `/api/orders/:id` | Cancel/delete an order |
 
 ### Shipping Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/delivery-options` | Get all available shipping methods |
-| GET | `/delivery-options?expand=estimatedDeliveryTime` | Get shipping methods with estimated delivery times |
+| GET | `/api/delivery-options` | Get all available shipping methods |
+| GET | `/api/delivery-options?expand=estimatedDeliveryTime` | Get shipping methods with estimated delivery times |
 
 #### Estimated Delivery Time:
 When using the `expand=estimatedDeliveryTime` parameter, each delivery option will include an additional field:
@@ -127,7 +128,7 @@ Example response:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/reset` | Reset database to default state (caution: deletes all data) |
+| POST | `/api/reset` | Reset database to default state (caution: deletes all data) |
 
 ## Quick Start Guide
 
@@ -135,45 +136,45 @@ This sequence demonstrates a typical checkout flow:
 
 1. **Browse products**
    ```
-   GET /products
+   GET /api/products
    ```
 
 2. **Search for products**
    ```
-   GET /products?search=basketball
+   GET /api/products?search=basketball
    ```
 
 3. **Add item to cart**
    ```
-   POST /cart-items
+   POST /api/cart-items
    {"productId": "e43638ce-6aa0-4b85-b27f-e1d07eb678c6", "quantity": 2}
    ```
 
 4. **Check payment summary**
    ```
-   GET /payment-summary
+   GET /api/payment-summary
    ```
 
 5. **Get delivery options with estimated times**
    ```
-   GET /delivery-options?expand=estimatedDeliveryTime
+   GET /api/delivery-options?expand=estimatedDeliveryTime
    ```
 
 6. **Update delivery option**
    ```
-   PUT /cart-items/e43638ce-6aa0-4b85-b27f-e1d07eb678c6
+   PUT /api/cart-items/e43638ce-6aa0-4b85-b27f-e1d07eb678c6
    {"deliveryOptionId": "2"}
    ```
 
 7. **Place an order**
    ```
-   POST /orders
+   POST /api/orders
    {"cart": [{"productId": "e43638ce-6aa0-4b85-b27f-e1d07eb678c6", "quantity": 2, "deliveryOptionId": "1"}]}
    ```
 
 8. **Check order status**
    ```
-   GET /orders
+   GET /api/orders
    ```
 
 ## Project Structure
